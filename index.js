@@ -8,14 +8,19 @@ const PORT = process.env.PORT;
 
 //middlewares
 app.use(express.json());
-app.use(fileupload());
+app.use(
+  fileupload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
 
 //database and cloudinary connection
 dbConnect();
 cloudinaryConnect();
 
 //routes
-app.use("/api/v1", route);
+app.use("/api/v1/upload", route);
 
 app.listen(PORT, () => {
   console.log("Server is running on Port", PORT);
