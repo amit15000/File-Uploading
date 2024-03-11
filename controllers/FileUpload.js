@@ -1,4 +1,4 @@
-const { response } = require("express");
+const { response, json } = require("express");
 const File = require("../models/FileModel");
 
 const cloudinary = require("cloudinary").v2;
@@ -122,6 +122,50 @@ exports.videoUpload = async (req, res) => {
       success: false,
       message: "Something went wrong",
       error: err.message,
+    });
+  }
+};
+exports.imageSizeReducer = async (req, res) => {
+  try {
+    //data fetch
+    const { name, tags, email } = req.body;
+    const file = req.files.myfile;
+
+    //validation
+    const supportedTypes = ["jpg", "jpeg", "png"];
+    const fileType = file.name.split(".")[1].toLowerCase();
+    if (!isFileTypeSupported(fileType, supportedTypes)) {
+      return res.status(400).json({
+        success: false,
+        messsage: "File format not supported",
+      });
+    }
+
+    //supported upload to cloudinary
+    const options = { asset_folder: "AmitFiles", overwrite: true, quality: 30 };
+
+    console.log(file);
+    const response = await uploadFileToCloudinary(file, options);
+    console.log("Clodinaty Response", response);
+
+    //save to database
+    await File.create({
+      name,
+      tags,
+      email,
+      fileUrl: response.secure_url,
+    });
+
+    res.json({
+      success: true,
+      message: "Reduced image uploaded succefully",
+      ImageUrl: response.secure_url,
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      message: "Something Went Wrong",
+      error: err,
     });
   }
 };
